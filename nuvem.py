@@ -90,39 +90,37 @@ def main():
     data = img.tobytes()
 
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, *resolution, 0, GL_RGB, GL_UNSIGNED_BYTE, data)
-    glBindImageTexture(2, texture_id, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F) # may change later
+    glBindImageTexture(0, texture_id, 0, GL_TRUE, 0, GL_READ_WRITE, GL_RGBA32F) # may change later
    
+    # setup shader
+    
     num_work_groups = (
         math.ceil(resolution[0] / 8),
         math.ceil(resolution[1] / 8),
         1
     )
 
-    # setup shader
+    shader_source = open('render.glsl').read()
+        
+    shader_id = glCreateShader(GL_COMPUTE_SHADER)
+    glShaderSource(shader_id, shader_source)
+    glCompileShader(shader_id)
 
-    #shader_source = open('render.glsl').read()
-    #    
-    #shader = glCreateShader(GL_COMPUTE_SHADER)
-    #glShaderSource(shader, shader_source)
-    #glCompileShader(shader)
-
-    #ok = glGetShaderiv(shader, GL_COMPILE_STATUS)
-    #if not ok:
-    #    print(glGetShaderInfoLog(shader).decode("utf-8"))
-    #    exit()
-    #            
-    #shader_id = glCreateProgram()
-    #glAttachShader(shader_id, shader)
-    #glDeleteShader(shader)
-    ##glBindAttribLocation(shader_id, 0, "target")
-    #glLinkProgram(shader_id)
+    ok = glGetShaderiv(shader_id, GL_COMPILE_STATUS)
+    if not ok:
+        exit(glGetShaderInfoLog(shader_id).decode("utf-8"))
+                
+    shader_program = glCreateProgram()
+    glAttachShader(shader_program, shader_id)
+    glDeleteShader(shader_id)
+    glLinkProgram(shader_program)
     
     # Loop until the user closes the window
     while not glfw.window_should_close(window):
-        #glUseProgram(shader_id)
+        glUseProgram(shader_program)
 
-        #glDispatchCompute(*num_work_groups)
-        #glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT)
+        glDispatchCompute(*num_work_groups)
+        glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT)
 
         # Render here, e.g. using pyOpenGL
         glClear(GL_COLOR_BUFFER_BIT);
