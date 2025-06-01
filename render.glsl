@@ -9,11 +9,15 @@ layout (
 ivec2 id = ivec2(gl_GlobalInvocationID.xy);
 
 layout (binding = 0, rgba32f) uniform image2D target;
+layout (binding = 1) uniform sampler3D cloud_sampler;
 
 vec2 res = vec2(1000, 1000);
 
 void main() {
-    imageStore(target, id, vec4(1.0));
+    vec2 uv = vec2(id) / res;
+    vec4 col = texture(cloud_sampler, vec3(uv, 0.5));
+
+    imageStore(target, id, vec4(col));
 }
 
 
